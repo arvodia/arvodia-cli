@@ -16,6 +16,6 @@
     },
     "bin": ["bin/arvodia"],
     "config": {
-        "bin-dir": "bin"
+        "bin-dir": "./"
     }
 }
