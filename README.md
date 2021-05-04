@@ -34,6 +34,8 @@ you can [download](http://https://downgit.github.io/#/home?url=https://github.co
 ````
 composer require arvodia/arvodia-cli
 cp -r vendor/arvodia/arvodia-cli/src/ ./
+ln -s ../vendor/bin/arvodia bin/
+php bin/arvodia
 ````
 
 ## Commands
