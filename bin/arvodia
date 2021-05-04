@@ -9,7 +9,7 @@
  * @project     : ARVODIA CLI Tools
  * @Description : Commands Manager system
  * @date        : 2021
- * @license     : tous droits réservés
+ * @license     : GNU General Public License v3.0
  * @update      : 1 mai 2021
  */
 if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {

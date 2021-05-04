@@ -6,7 +6,7 @@
  * @email   : arvodia@hotmail.com
  * @project : Webfony
  * @date    : 2021
- * @license : tous droits réservés
+ * @license : GNU General Public License v3.0
  * @update  : 3 mai 2021
  */
 define('DS', DIRECTORY_SEPARATOR);
