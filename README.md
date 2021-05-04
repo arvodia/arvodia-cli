@@ -84,8 +84,8 @@ it can be placed at the beginning or in the middle or at the end.
 Note:
   The script will stop when the first bad option is found. 
 
-##Configuration
-to customize the title of the console introduction, modify the constant `ARVODIA_CLI_TITLE` in the src/Arvodia/Autoloader.php file
+## Configuration
+To customize the title of the console introduction, modify the constant `ARVODIA_CLI_TITLE` in the src/Arvodia/Autoloader.php file
 
 ## Git clone
 ```
