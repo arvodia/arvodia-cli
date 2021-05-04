@@ -1,7 +1,7 @@
 {
     "name": "arvodia/arvodia-cli",
     "description": "ARVODIA CLI Tools",
-    "license": "GNU General Public License v3.0",
+    "license": "GPL-3.0-only",
     "authors": [
         {
             "name": "Sidi Said Redouane",
