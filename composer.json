@@ -1,0 +1,12 @@
+{
+    "name": "arvodia/arvodia-cli",
+    "description": "ARVODIA CLI Tools",
+    "license": "GNU General Public License v3.0",
+    "authors": [
+        {
+            "name": "Sidi Said Redouane",
+            "email": "arvodia@hotmail.com"
+        }
+    ],
+    "require": {}
+}
