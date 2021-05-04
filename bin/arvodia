@@ -18,37 +18,32 @@ if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 
 set_time_limit(0);
 
-const CLI_DESCRIPTION = 'Welcome to ARVODIA CLI Tools';
-
-if (file_exists(dirname(__DIR__) . '/src/Arvodia/Autoloader.php')) {
-    require dirname(__DIR__) . '/src/Arvodia/Autoloader.php';
+if (($autoloader = realpath(__DIR__ . '/../../../../src/Arvodia/Autoloader.php')) ||
+        ($autoloader = realpath(dirname(__DIR__) . '/src/Arvodia/Autoloader.php'))) {
+    require $autoloader;
+    Autoloader::register();
 }
 
 /**
  * Example Command
  */
-class ExampleCommand extends ArvodiaCli {
-
-    protected const DESCRIPTION = 'Example commands';
-    protected const HELP = <<<'EOF'
-The <green>example</green> command execution method executes the ExampleCommand:
-
-    <green>%command.full_name% </green>
-
-example help description:
-    <green>%command.full_name% -r</green>
-EOF;
-
-    /**
-     * 
-     * @option(param=requise,short=r, message="the parameter requires a value")
-     * @option(param=optionnel,short=o, message="parameter value is optional")
-     */
-    public function execute(string $requise, string $optionnel = 'hello') {
-        $this->show($optionnel . ' ' . $requise . '!');
-    }
-
-}
+//class ExampleCommand extends ArvodiaCli {
+//    protected const DESCRIPTION = 'Example commands';
+//    protected const HELP = <<<'EOF'
+//The <green>example</green> command execution method executes the ExampleCommand:
+//    <green>%command.full_name% </green>
+//example help description:
+//    <green>%command.full_name% -r</green>
+//EOF;
+//    /**
+//     * 
+//     * @option(param=requise,short=r, message="the parameter requires a value")
+//     * @option(param=optionnel,short=o, message="parameter value is optional")
+//     */
+//    public function execute(string $requise, string $optionnel = 'hello') {
+//        $this->show($optionnel . ' ' . $requise . '!');
+//    }
+//}
 
 /**
  * ARVODIA CLI Tools
@@ -77,6 +72,7 @@ class ArvodiaCli {
     private const BGREEN = "\033[42;1;30m";
     private const RESET = "\033[0m";
     private const ANNOTATION_KEYS = ['param', 'short', 'message'];
+    private const CLI_TITLE = 'Welcome to ARVODIA CLI Tools';
     private const CLI_USAGE = '%command.full_name% [command-name] [options] [=<value>]';
     private const GLOBAL_OPTION = [
         'help' => [
@@ -153,6 +149,8 @@ EOF;
                     $parametres[] = $options[$option] ?? $param['default'];
                 }
                 (new $command())->setCommandFullName($this->commandFullName)->execute(...$parametres);
+            } else {
+                $this->exception(16, $this->commandName);
             }
         }
     }
@@ -177,7 +175,7 @@ EOF;
     }
 
     protected function showBlock(string $text, string $color = 'BGREEN'): void {
-        echo PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . PHP_EOL . str_pad($text, 50, " ", STR_PAD_BOTH) . PHP_EOL . str_pad(" ", 50, " ", STR_PAD_BOTH) . PHP_EOL . PHP_EOL . self::RESET . PHP_EOL;
+        echo PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . self::RESET . PHP_EOL . $this->getColor($color) . str_pad($text, 50, " ", STR_PAD_BOTH) . self::RESET . PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . self::RESET . PHP_EOL . PHP_EOL . PHP_EOL;
     }
 
     protected function showList(array $array = [], bool $raw = false, int $level = 0): void {
@@ -219,7 +217,7 @@ EOF;
     }
 
     private function printHelp(): void {
-        $this->commandName ? (($desc = $this->getCommands($this->commandName)['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock(CLI_DESCRIPTION);
+        $this->commandName ? (($desc = $this->getCommands($this->commandName)['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock(defined('ARVODIA_CLI_TITLE') ? ARVODIA_CLI_TITLE : self::CLI_TITLE);
         $this->show('Usage:', 'YELLOW');
         $this->show($this->commandName ? $this->getCommands($this->commandName)['usage'] ?: self::CLI_USAGE : self::CLI_USAGE);
         foreach ($this->commandName ? $this->getCommands($this->commandName)['options'] : self::GLOBAL_OPTION as $param) {
@@ -440,6 +438,8 @@ EOF;
             case 14:$this->show(sprintf('Error : You cannot use option "%s" with a required value in a multi short option.', ...$detail), 'RED');
                 break;
             case 15:$this->show(sprintf('Error : The separator "=" invalid in the option "%s".', ...$detail), 'RED');
+                break;
+            case 16:$this->show(sprintf('Error : Command "%s" is not defined.', ...$detail), 'RED');
                 break;
             default:$this->show(implode(" ", $detail), 'RED');
                 break;

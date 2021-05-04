@@ -1,12 +1,21 @@
 {
     "name": "arvodia/arvodia-cli",
     "description": "ARVODIA CLI Tools",
+    "type": "library",
     "license": "GPL-3.0-only",
+    "homepage": "https://github.com/arvodia/arvodia-cli",
     "authors": [
         {
             "name": "Sidi Said Redouane",
             "email": "arvodia@hotmail.com"
         }
     ],
-    "require": {}
+    "version": "v1.0.2",
+    "require": {
+        "php": ">=7.2.5"
+    },
+    "bin": ["bin/arvodia"],
+    "config": {
+        "bin-dir": "bin"
+    }
 }

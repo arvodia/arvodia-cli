@@ -11,6 +11,7 @@
  */
 define('DS', DIRECTORY_SEPARATOR);
 define('ARVODIA_DIR', __DIR__ . DS);
+define('ARVODIA_CLI_TITLE', 'Example Console Title');
 
 class Autoloader {
 
@@ -27,6 +28,4 @@ class Autoloader {
     }
 
 }
-
-Autoloader::register();
 ?>
