@@ -1,0 +1,455 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * @author      : Sidi Said Redouane <sidisaidredouane@live.com>
+ * @agency      : EURL ARVODIA
+ * @email       : arvodia@hotmail.com
+ * @name        : arvodia-cli
+ * @project     : ARVODIA CLI Tools
+ * @Description : Commands Manager system
+ * @date        : 2021
+ * @license     : tous droits réservés
+ * @update      : 1 mai 2021
+ */
+if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+    echo 'Warning: The console should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;
+}
+
+set_time_limit(0);
+
+const CLI_DESCRIPTION = 'Welcome to ARVODIA CLI Tools';
+
+if (file_exists(dirname(__DIR__) . '/src/Arvodia/Autoloader.php')) {
+    require dirname(__DIR__) . '/src/Arvodia/Autoloader.php';
+}
+
+/**
+ * Example Command
+ */
+class ExampleCommand extends ArvodiaCli {
+
+    protected const DESCRIPTION = 'Example commands';
+    protected const HELP = <<<'EOF'
+The <green>example</green> command execution method executes the ExampleCommand:
+
+    <green>%command.full_name% </green>
+
+example help description:
+    <green>%command.full_name% -r</green>
+EOF;
+
+    /**
+     * 
+     * @option(param=requise,short=r, message="the parameter requires a value")
+     * @option(param=optionnel,short=o, message="parameter value is optional")
+     */
+    public function execute(string $requise, string $optionnel = 'hello') {
+        $this->show($optionnel . ' ' . $requise . '!');
+    }
+
+}
+
+/**
+ * ARVODIA CLI Tools
+ * 
+ * The name of the first argument to find is the name of the command to execute
+ *   Note: it can be placed at the beginning or in the middle or at the end.
+ *
+ * A parameter without a default value (the parameter requires a value) // required value
+ *   Note: If a value is required, it doesn't matter which string it next assigns to it.
+ * A parameter with default value (the parameter value is optional)
+ *   Note: Optional values do not accept space as a separator.
+ * A parameter with type bool, boolean:
+ *   These options do not accept any value if there is a default value, it will just revert to true if it is found.
+ *   With required value, These options accept the values "1", "true", "on", "yes", "0", "false", "off" and "no"
+ *   Possible multiple short name with a default value, example -abc
+ *
+ * Note:
+ *   The script will stop when the first bad option is found. 
+ */
+class ArvodiaCli {
+
+    private const GREEN = "\033[0;32m";
+    private const RED = "\033[0;31m";
+    private const YELLOW = "\033[1;33m";
+    private const CYAN = "\033[0;36m";
+    private const BGREEN = "\033[42;1;30m";
+    private const RESET = "\033[0m";
+    private const ANNOTATION_KEYS = ['param', 'short', 'message'];
+    private const CLI_USAGE = '%command.full_name% [command-name] [options] [=<value>]';
+    private const GLOBAL_OPTION = [
+        'help' => [
+            'short' => 'h',
+            'long' => 'help',
+            'required' => false,
+            'default' => false,
+            'type' => 'bool',
+            'desc' => 'Display help for the given command. When no command is given display help for the <green>list</green> command'
+        ],
+    ];
+    private const LIST_DESCRIPTION = 'List commands';
+    private const LIST_OPTION = [
+        'raw' => [
+            'short' => 'r',
+            'long' => 'raw',
+            'required' => false,
+            'default' => false,
+            'type' => 'bool',
+            'desc' => 'To output raw command list'
+        ],
+    ];
+    private const LIST_HELP = <<<'EOF'
+The <green>list</green> command lists all commands:
+
+    <green>%command.full_name% </green>
+
+It's also possible to get raw list of commands:
+
+    <green>%command.full_name% --raw</green>
+    or
+    <green>%command.full_name% -r</green>
+EOF;
+
+    private $commands;
+    private $commandName;
+    private $commandFullName;
+    private $parametresOptions;
+    private $commandsPath;
+
+    public function __construct(array $argv = []) {
+        if (get_class() === get_class($this)) {
+            global $argv;
+            foreach ($argv as $key => $arg) {
+                if (!$key || '-' === $arg[0]) {
+                    continue;
+                } else {
+                    $this->commandName = $arg;
+                    break;
+                }
+            }
+            $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
+            $this->commandsPath = dirname(__FILE__) . DIRECTORY_SEPARATOR . basename($argv[0]);
+            if (!$this->commandName && $this->getOptions('help')) {
+                if ($this->getCommands($this->commandName)['list']) {
+                    $this->commandName = 'list';
+                    $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
+                }
+                $this->printHelp();
+                self::SUCCESS();
+            }
+            if (!$this->commandName && !$this->getOptions('help')) {
+                $this->printHelp();
+                !$this->getCommands() ?: $this->showList(['Available commands' => array_column($this->getCommands(), 'desc', 'name')]);
+                self::SUCCESS();
+            }
+            if ('list' === $this->commandName) {
+                $this->showList(['Available commands' => array_column($this->getCommands(null, true), 'desc', 'name')], (bool) $this->getOptions('raw'));
+                self::SUCCESS();
+            }
+            if ($command = $this->getCommands($this->commandName)['class'] ?? false) {
+                $options = array_diff_key($this->getOptions(), self::GLOBAL_OPTION);
+                foreach ($this->getCommands($this->commandName)['options'] as $option => $param) {
+                    $parametres[] = $options[$option] ?? $param['default'];
+                }
+                (new $command())->setCommandFullName($this->commandFullName)->execute(...$parametres);
+            }
+        }
+    }
+
+    public function setCommandFullName($name): self {
+        $this->commandFullName = $name;
+        return $this;
+    }
+
+    protected static function SUCCESS() {
+        exit(0);
+    }
+
+    protected static function FAILURE() {
+        exit(1);
+    }
+
+    protected function show($text, $color = null, ?string $newline = PHP_EOL): void {
+        echo $this->getColor($color) . $text = preg_replace_callback('#<(green|red|yellow|cyan)>(.+)</(?:green|red|yellow|cyan)>#isU', function ($regs) {
+            return $this->getColor($regs[1]) . $regs[2] . self::RESET;
+        }, $text = str_replace('%command.full_name%', $this->commandFullName, $text)) . self::RESET . $newline;
+    }
+
+    protected function showBlock(string $text, string $color = 'BGREEN'): void {
+        echo PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . PHP_EOL . str_pad($text, 50, " ", STR_PAD_BOTH) . PHP_EOL . str_pad(" ", 50, " ", STR_PAD_BOTH) . PHP_EOL . PHP_EOL . self::RESET . PHP_EOL;
+    }
+
+    protected function showList(array $array = [], bool $raw = false, int $level = 0): void {
+        foreach ($array as $title => $value) {
+            if (!$raw && !$level) {
+                echo PHP_EOL;
+            }
+            if (is_array($value)) {
+                if (!$raw) {
+                    $this->show(str_repeat(' ', $level * 3) . $title . ':', 'YELLOW');
+                }
+                $this->showList($value, $raw, $level + 1);
+            } else {
+                $this->show(($raw ? '' : str_repeat(' ', $level * 3)) . str_pad($title, $pad ?? ($pad = ($this->getMaxStrlen(array_keys($array)) + 2)), " "), $raw ? null : 'GREEN', null);
+                $this->show($value);
+            }
+        }
+    }
+
+    private function getColor($color = null): string {
+        return defined('self::' . $color = strtoupper($color)) ? constant('self::' . $color) : self::RESET;
+    }
+
+    private function getMaxStrlen(array $array): int {
+        foreach ($array as $string) {
+            $max = max(strlen($string), $max ?? 0);
+        }
+        return $max;
+    }
+
+    /**
+     * @author  : Julio Marchi
+     */
+    private function isEnabled($variable) {
+        if (!isset($variable)) {
+            return null;
+        }
+        return filter_var($variable, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+
+    private function printHelp(): void {
+        $this->commandName ? (($desc = $this->getCommands($this->commandName)['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock(CLI_DESCRIPTION);
+        $this->show('Usage:', 'YELLOW');
+        $this->show($this->commandName ? $this->getCommands($this->commandName)['usage'] ?: self::CLI_USAGE : self::CLI_USAGE);
+        foreach ($this->commandName ? $this->getCommands($this->commandName)['options'] : self::GLOBAL_OPTION as $param) {
+            $options[($param['short'] ? '-' . $param['short'] . ', ' : '') . $param['long']] = $param['desc'] . ($param['required'] ? '<red>[required]</red>' : ($param['default'] ? '<yellow>[default: "' . $param['default'] . '"]</yellow>' : ''));
+        }
+        if ($options ?? false) {
+            $this->showList(['Options' => $options]);
+        }
+        if ($this->commandName && $this->getCommands($this->commandName)['help']) {
+            $this->show(PHP_EOL . 'Help:', 'YELLOW');
+            $this->show($this->getCommands($this->commandName)['help']);
+        }
+    }
+
+    private function getClassCommands(): array {
+        foreach (($tokens = token_get_all(file_get_contents($this->commandsPath))) as $key => $token) {
+            if (is_array($token) && $token[0] == T_CLASS && ($tokens[$key + 2] ?? null == T_STRING) && str_ends_with($tokens[$key + 2][1] ?? null, 'Command') && ($name = substr(strtolower($tokens[$key + 2][1]), 0, -7))) {
+                $class = $tokens[$key + 2][1];
+                if (isset($commands[$name])) {
+                    $this->exception(7, [$name, $class]);
+                }
+                $commands[$name] = $class;
+            }
+        }
+        if (defined('ARVODIA_DIR')) {
+            foreach (scandir(ARVODIA_DIR . 'Command') as $class) {
+                if (str_ends_with($class, 'Command.php')) {
+                    $name = substr(strtolower($class = str_replace('.php', '', $class)), 0, -7);
+                    if (isset($commands[$name])) {
+                        $this->exception(7, [$name, $class]);
+                    }
+                    $commands[$name] = 'Command\\' . $class;
+                }
+            }
+        }
+        return $commands ?? [];
+    }
+
+    private function getCommands(string $name = null, bool $reload = false): ?array {
+        if (!is_null($this->commands) && !$reload) {
+            return $name ? $this->commands[$name] ?? null : $this->commands;
+        }
+        $this->commands['list'] = [
+            'name' => 'list',
+            'class' => null,
+            'desc' => self::LIST_DESCRIPTION,
+            'usage' => null,
+            'help' => self::LIST_HELP,
+            'options' => self::LIST_OPTION,
+        ];
+        foreach ($this->getClassCommands() as $command => $class) {
+            if ($name && $name !== $command) {
+                continue;
+            }
+            if (($rc = new ReflectionClass($class))->getParentClass()) {
+                if (!$rc->hasMethod('execute')) {
+                    $this->exception(1, $class);
+                }
+                $this->commands[$command] = [
+                    'name' => $command,
+                    'class' => $class,
+                    'desc' => $rc->getConstant('DESCRIPTION'),
+                    'usage' => $rc->getConstant('USAGE'),
+                    'help' => $rc->getConstant('HELP'),
+                    'options' => [],
+                ];
+                $docComment = ($rf = $rc->getMethod('execute'))->getDocComment();
+                foreach ($rf->getParameters() as $key => $param) {
+                    if (strlen($param->getName()) === 1) {
+                        $this->exception(13, [$param->getName(), $class]);
+                    }
+                    $this->commands[$command]['options'][$param->getName()] = [
+                        'short' => null,
+                        'long' => $param->getName(),
+                        'position' => $param->getPosition(),
+                        'required' => !$param->isOptional(),
+                        'default' => $param->isOptional() ? $param->getDefaultValue() : null,
+                        'type' => $param->hasType() ? $param->getType()->getName() : null,
+                        'desc' => null,
+                    ];
+                }
+                if ($docComment && preg_match_all('#@option\((.*)\)#i', $docComment, $annotations)) {
+                    foreach ($annotations[1] as $annotation) {
+                        $annotation = preg_replace_callback('#"(.*)"#U', function ($regs) {
+                            return str_replace([',', '='], ['&#44;', '&#61;'], $regs[0]);
+                        }, $annotation);
+                        $optionArguments = [];
+                        foreach (explode(',', $annotation) as $annotArguments) {
+                            $annotArguments = explode('=', $annotArguments);
+                            for ($i = 0; $i < count($annotArguments); $i += 2) {
+                                if (!in_array($var = trim($annotArguments[$i]), self::ANNOTATION_KEYS) || !isset($annotArguments[$i + 1]) || !$annotArguments[$i + 1]) {
+                                    $this->exception(2, [$var, $class]);
+                                }
+                                $optionArguments[$var] = trim($annotArguments[$i + 1]);
+                            }
+                        }
+                        if (!isset($optionArguments['param'])) {
+                            $this->exception(3, $class);
+                        }
+                        if (!isset($this->commands[$command]['options'][$optionArguments['param']])) {
+                            $this->exception(4, [$optionArguments['param'], $class]);
+                        }
+                        if (isset($optionArguments['short']) && isset($optionArguments['short'][1])) {
+                            $this->exception(5, [$optionArguments['short'], $class]);
+                        }
+                        if ($name && isset($optionArguments['short']) && in_array($optionArguments['short'], array_column(array_merge(self::GLOBAL_OPTION, $this->commands[$command]['options']), 'short'))) {
+                            $this->exception(6, [$optionArguments['short'], $class]);
+                        }
+                        $this->commands[$command]['options'][$optionArguments['param']]['short'] = $optionArguments['short'] ?? null;
+                        $this->commands[$command]['options'][$optionArguments['param']]['desc'] = ($optionArguments['message'] ?? null) ? trim(str_replace(['&#44;', '&#61;'], [',', '='], $optionArguments['message']), '"') : null;
+                    }
+                }
+            }
+        }
+        return $name ? $this->commands[$name] ?? null : $this->commands;
+    }
+
+    private function getOptions(string $name = null) {
+        if (!is_null($this->parametresOptions)) {
+            return $name ? $this->parametresOptions[$name] ?? null : $this->parametresOptions;
+        }
+        global $argv;
+        $options = array_merge($this->commandName ? $this->getCommands($this->commandName)['options'] ?? [] : [], self::GLOBAL_OPTION);
+        foreach ($argv as $key => $args) {
+            if ($jump ?? false) {
+                $jump = false;
+                continue;
+            }
+            if ($key && isset($args[1]) && '-' == $args[0]) {
+                $opts = ($value = explode('=', substr($args, '-' == $args[1] ? 2 : 1)))[0];
+                $value = ($value[1] ?? false) && array_shift($value) ? implode('=', $value) : null;
+                if ('-' == $args[1] && !isset($opts[1])) {
+                    $this->exception(12, $args);
+                }
+                if ('-' != $args[1] && isset($opts[1])) {
+                    if (strpos($args, '=')) {
+                        $this->exception(15, $args);
+                    }
+                    $i = 0;
+                    while ($opts[$i] ?? false) {
+                        if (array_column($options, 'required', 'short')[$opts[$i]] ?? false) {
+                            $this->exception(14, '-' . $opts[$i]);
+                        }
+                        $multiShort['-' . $opts[$i]] = $opts[$i];
+                        $i++;
+                    }
+                }
+                foreach (is_array($opts) ? $opts : [$args => $opts] as $arg => $opt) {
+                    if (in_array($opt, array_column($options, $style = (isset($opt[1]) ? 'long' : 'short')))) {
+                        if ($options[$option = array_search($opt, array_column($options, $style, 'long'))]['required']) {
+                            if (is_null($value)) {
+                                if (is_null($value = $argv[$key + 1] ?? null)) {
+                                    $this->exception(8, $option);
+                                }
+                                $jump = true;
+                            }
+                        }
+                        if (isset($this->parametresOptions[$option]) && 'array' !== $options[$option]['type']) {
+                            $this->exception(9, $option);
+                        }
+                        if ('bool' === $options[$option]['type']) {
+                            if ($options[$option]['required']) {
+                                if (is_null($value = $this->isEnabled($value))) {
+                                    $this->exception(10, $option);
+                                }
+                            } else {
+                                $value = true;
+                            }
+                        } elseif ((!is_null($options[$option]['type']) && 'array' !== $options[$option]['type']) && gettype($value) !== $options[$option]['type']) {
+                            $this->exception(11, [$option, $options[$option]['type'], gettype($value)]);
+                        }
+                        $this->parametresOptions[$option] = ('array' === $options[$option]['type'] ? array_merge([$value], $this->parametresOptions[$option] ?? []) : $value);
+                    } else {
+                        $this->exception(12, $arg);
+                    }
+                }
+            } else if ($key && $this->commandName != $args) {
+                $this->exception(12, $args);
+            }
+        }
+        foreach (array_diff(array_keys($options ?? []), array_keys($this->parametresOptions ?? [])) as $option) {
+            if ($options[$option]['required']) {
+                $this->exception(8, $option);
+            }
+        }
+        return $this->parametresOptions;
+    }
+
+    private function exception(int $exception = null, $detail = null): array {
+        $detail = is_null($detail) ? '' : (is_array($detail) ? $detail : [$detail]);
+        switch ($exception) {
+            case 1:$this->show(sprintf('Error : The "execute()" method of the "%s" class has not been declared.', ...$detail), 'RED');
+                break;
+            case 2:$this->show(sprintf('Error : Annotation argument "%1$s" is invalid of the class "%2$s".', ...$detail), 'RED');
+                break;
+            case 3:$this->show(sprintf('Error : Argument "param" was not declared in the execute method annotation of class "%s".', ...$detail), 'RED');
+                break;
+            case 4:$this->show(sprintf('Error : In the annotation argument "%1$s" was not declared in the function "execute ()" of the class "%2$s".', ...$detail), 'RED');
+                break;
+            case 5:$this->show(sprintf('Error : Short options name "%1$s" must contain a single character of the class "%2$s".', ...$detail), 'RED');
+                break;
+            case 6:$this->show(sprintf('Error : Short options name "%1$s" already exists from class "%2$s".', ...$detail), 'RED');
+                break;
+            case 7:$this->show(sprintf('Error : The name of the command "%1$s", already exists of the class "%2$s".', ...$detail), 'RED');
+                break;
+            case 8:$this->show(sprintf('Error : Not enough arguments (missing: "%s").', ...$detail), 'RED');
+                break;
+            case 9:$this->show(sprintf('Error : Options "%s" is not of type array.', ...$detail), 'RED');
+                break;
+            case 10:$this->show(sprintf('Error : Options "%s": accept the values "1", "true", "on", "yes", "0", "false", "off" or "no".', ...$detail), 'RED');
+                break;
+            case 11:$this->show(sprintf('Error : Argument "%1$s" must be of type "%2$s", "%3$s" given.', ...$detail), 'RED');
+                break;
+            case 12:$this->show(sprintf('Error : The "%s" option does not exist.', ...$detail), 'RED');
+                break;
+            case 13:$this->show(sprintf('Error : The name of the variable "%1$s" less finger to have two characters, in the method "execute ()" of the class "%2$s".', ...$detail), 'RED');
+                break;
+            case 14:$this->show(sprintf('Error : You cannot use option "%s" with a required value in a multi short option.', ...$detail), 'RED');
+                break;
+            case 15:$this->show(sprintf('Error : The separator "=" invalid in the option "%s".', ...$detail), 'RED');
+                break;
+            default:$this->show(implode(" ", $detail), 'RED');
+                break;
+        }
+        self::FAILURE();
+    }
+
+}
+
+/**
+ * Run ARVODIA CLI
+ */
+new ArvodiaCli();
