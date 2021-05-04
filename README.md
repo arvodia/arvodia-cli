@@ -30,7 +30,7 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
   - help
 
 ## Installation
-you can [download](http://https://downgit.github.io/#/home?url=https://github.com/arvodia/arvodia-cli/blob/main/bin/arvodia "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer and copy the src folder to the root project :
+you can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer and copy the src folder to the root project :
 ````
 composer require arvodia/arvodia-cli
 cp -r vendor/arvodia/arvodia-cli/src/ ./
