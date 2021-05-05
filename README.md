@@ -25,21 +25,22 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
   - possibility of setting the optional boolean option, example: -abc
   - decoration the text output color, block and list
   - list command lists all commands:
-  - description
-  - usage
-  - help
+  - command description
+  - command usage
+  - command help
 
 ## Installation
-you can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer and copy the src folder to the root project :
+you can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer.
 ````
 composer require arvodia/arvodia-cli
-cp -r vendor/arvodia/arvodia-cli/src/ ./
-ln -s ../vendor/bin/arvodia bin/
-php bin/arvodia
+````
+to execute
+````
+php bin/terminal
 ````
 
 ## Commands
-Class Commands can be integrated directly in the `bin/arvodia` file, if you want to use a single file for your executable.
+Class Commands can be integrated directly in the `bin/terminal` file, if you want to use a single file for your executable.
 
 You can also create PHP files in the `src/Arvodia/Command` folder, the files must be suffixed with Command, for example `NameCommand.php`, with a class of the same name as the file, 
 the commands is automatically detected by arvodia-cli.
@@ -87,7 +88,7 @@ Note:
   The script will stop when the first bad option is found. 
 
 ## Configuration
-To customize the title of the console introduction, modify the constant `ARVODIA_CLI_TITLE` in the src/Arvodia/Autoloader.php file
+To customize the title of the console introduction, modify the `arvodia_cli_title` key in the `Command/config.json` file
 
 ## Git clone
 ```

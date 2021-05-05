@@ -10,6 +10,7 @@
  * @Description : Commands Manager system
  * @date        : 2021
  * @license     : GNU General Public License v3.0
+ * @homepage    : https://github.com/arvodia/arvodia-cli
  * @update      : 1 mai 2021
  */
 if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
@@ -17,12 +18,6 @@ if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 }
 
 set_time_limit(0);
-
-if (($autoloader = realpath(__DIR__ . '/../../../../src/Arvodia/Autoloader.php')) ||
-        ($autoloader = realpath(dirname(__DIR__) . '/src/Arvodia/Autoloader.php'))) {
-    require $autoloader;
-    Autoloader::register();
-}
 
 /**
  * Example Command
@@ -48,20 +43,6 @@ if (($autoloader = realpath(__DIR__ . '/../../../../src/Arvodia/Autoloader.php')
 /**
  * ARVODIA CLI Tools
  * 
- * The name of the first argument to find is the name of the command to execute
- *   Note: it can be placed at the beginning or in the middle or at the end.
- *
- * A parameter without a default value (the parameter requires a value) // required value
- *   Note: If a value is required, it doesn't matter which string it next assigns to it.
- * A parameter with default value (the parameter value is optional)
- *   Note: Optional values do not accept space as a separator.
- * A parameter with type bool, boolean:
- *   These options do not accept any value if there is a default value, it will just revert to true if it is found.
- *   With required value, These options accept the values "1", "true", "on", "yes", "0", "false", "off" and "no"
- *   Possible multiple short name with a default value, example -abc
- *
- * Note:
- *   The script will stop when the first bad option is found. 
  */
 class ArvodiaCli {
 
@@ -111,7 +92,8 @@ EOF;
     private $commandName;
     private $commandFullName;
     private $parametresOptions;
-    private $commandsPath;
+    private $cliPath;
+    private $commandsDir;
 
     public function __construct(array $argv = []) {
         if (get_class() === get_class($this)) {
@@ -125,7 +107,7 @@ EOF;
                 }
             }
             $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
-            $this->commandsPath = dirname(__FILE__) . DIRECTORY_SEPARATOR . basename($argv[0]);
+            $this->cliPath = dirname(__FILE__) . DIRECTORY_SEPARATOR . basename($argv[0]);
             if (!$this->commandName && $this->getOptions('help')) {
                 if ($this->getCommands($this->commandName)['list']) {
                     $this->commandName = 'list';
@@ -217,23 +199,25 @@ EOF;
     }
 
     private function printHelp(): void {
-        $this->commandName ? (($desc = $this->getCommands($this->commandName)['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock(defined('ARVODIA_CLI_TITLE') ? ARVODIA_CLI_TITLE : self::CLI_TITLE);
+        $command = $this->getCommands($this->commandName);
+        $this->commandsDir && is_file($this->commandsDir . '/config.json') && ($cliTitle = (json_decode(file_get_contents($this->commandsDir . '/config.json'), TRUE))['arvodia_cli_title'] ?? false);
+        $this->commandName ? (($desc = $command['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock($cliTitle ?? self::CLI_TITLE ?: self::CLI_TITLE);
         $this->show('Usage:', 'YELLOW');
-        $this->show($this->commandName ? $this->getCommands($this->commandName)['usage'] ?: self::CLI_USAGE : self::CLI_USAGE);
-        foreach ($this->commandName ? $this->getCommands($this->commandName)['options'] : self::GLOBAL_OPTION as $param) {
+        $this->show($this->commandName ? $command['usage'] ?: self::CLI_USAGE : self::CLI_USAGE);
+        foreach ($this->commandName ? $command['options'] : self::GLOBAL_OPTION as $param) {
             $options[($param['short'] ? '-' . $param['short'] . ', ' : '') . $param['long']] = $param['desc'] . ($param['required'] ? '<red>[required]</red>' : ($param['default'] ? '<yellow>[default: "' . $param['default'] . '"]</yellow>' : ''));
         }
         if ($options ?? false) {
             $this->showList(['Options' => $options]);
         }
-        if ($this->commandName && $this->getCommands($this->commandName)['help']) {
+        if ($this->commandName && $command['help']) {
             $this->show(PHP_EOL . 'Help:', 'YELLOW');
-            $this->show($this->getCommands($this->commandName)['help']);
+            $this->show($command['help']);
         }
     }
 
     private function getClassCommands(): array {
-        foreach (($tokens = token_get_all(file_get_contents($this->commandsPath))) as $key => $token) {
+        foreach (($tokens = token_get_all(file_get_contents($this->cliPath))) as $key => $token) {
             if (is_array($token) && $token[0] == T_CLASS && ($tokens[$key + 2] ?? null == T_STRING) && str_ends_with($tokens[$key + 2][1] ?? null, 'Command') && ($name = substr(strtolower($tokens[$key + 2][1]), 0, -7))) {
                 $class = $tokens[$key + 2][1];
                 if (isset($commands[$name])) {
@@ -242,14 +226,17 @@ EOF;
                 $commands[$name] = $class;
             }
         }
-        if (defined('ARVODIA_DIR')) {
-            foreach (scandir(ARVODIA_DIR . 'Command') as $class) {
-                if (str_ends_with($class, 'Command.php')) {
-                    $name = substr(strtolower($class = str_replace('.php', '', $class)), 0, -7);
-                    if (isset($commands[$name])) {
-                        $this->exception(7, [$name, $class]);
+        if (file_exists(dirname(__DIR__) . '/src/Arvodia/Autoloader.php')) {
+            require dirname(__DIR__) . '/src/Arvodia/Autoloader.php';
+            if ($this->commandsDir = Autoloader::register()) {
+                foreach (scandir($this->commandsDir) as $class) {
+                    if (str_ends_with($class, 'Command.php')) {
+                        $name = substr(strtolower($class = str_replace('.php', '', $class)), 0, -7);
+                        if (isset($commands[$name])) {
+                            $this->exception(7, [$name, $class]);
+                        }
+                        $commands[$name] = 'Arvodia\Command\\' . $class;
                     }
-                    $commands[$name] = 'Command\\' . $class;
                 }
             }
         }

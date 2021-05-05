@@ -10,7 +10,9 @@
  * @update  : 3 mai 2021
  */
 
-namespace Command;
+namespace Arvodia\Command;
+
+use Arvodia\Terminal\Output\Display;
 
 /**
  * Hello Command
@@ -21,7 +23,7 @@ namespace Command;
  *
  * @author Sidi Said Redouane <sidisaidredouane@live.com>
  */
-class HelloCommand extends Output {
+class HelloCommand extends Display {
 
     protected const DESCRIPTION = 'Hello commands';
     protected const HELP = <<<'EOF'
