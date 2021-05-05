@@ -133,7 +133,7 @@ EOF;
                 foreach ($this->getCommands($this->commandName)['options'] as $option => $param) {
                     $parametres[] = $options[$option] ?? $param['default'];
                 }
-                (new $command())->setCommandFullName($this->commandFullName)->execute(...$parametres);
+                (new $command())->setCommandFullName($this->commandFullName)->execute(...$parametres ?? []);
             } else {
                 $this->exception(16, $this->commandName);
             }
