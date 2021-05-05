@@ -30,6 +30,9 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
   - verbose level option, example : -v -vv -vvv
   - command description, usage and help
 
+## Screenshot
+![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/arvodia-cli-screenshot.png)
+
 ## Installation
 You can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer.
 ````
