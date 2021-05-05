@@ -11,7 +11,7 @@
  * @date        : 2021
  * @license     : GNU General Public License v3.0
  * @homepage    : https://github.com/arvodia/arvodia-cli
- * @update      : 1 mai 2021
+ * @update      : 01 mai 2021
  */
 if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     echo 'Warning: The console should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;

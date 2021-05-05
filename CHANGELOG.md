@@ -4,9 +4,9 @@ CHANGELOG
 1.0.7
 -----
  * added verbose mode it provides additional details for diagnostic and debugging purposes.
- * added the type of variable for the possibility of optional chaining
- * add other exception
- * typing correction and code improvement
+ * added the type of variable for the possibility of optional chaining.
+ * add other exception.
+ * typing correction and code improvement.
  
 1.0.6
 -----
