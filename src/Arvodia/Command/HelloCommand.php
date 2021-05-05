@@ -41,6 +41,7 @@ EOF;
      * @option(param=optionnel,short=o, message="parameter value is optional")
      */
     public function execute(string $requise, string $optionnel = 'hello') {
+        $this->show('Verbosity levels is : ' . (int) getenv('VERBOSE'));
         $this->showBlock($optionnel . ' ' . $requise . '!');
         $this->show($optionnel . ' ' . $requise . '!');
         $array = ['type1' => [

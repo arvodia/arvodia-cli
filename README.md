@@ -15,19 +15,20 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
  - [License](#license)
 
 ## Feature
-  - only one method except for an order
+  - a single executable file, or with load class
+  - a method for a command.
   - the input options are injected into the parameters of the function
   - support variable annotation for description and shorcut
   - the longname input are the same as the name of the function parameters
   - validation of the required value
   - also other verification such as the command name which does not exist
   - compare the type of option input with the variables of the function parameters
-  - possibility of setting the optional boolean option, example: -abc
+  - the possibility of optional chaining, example: -abc
   - decoration the text output color, block and list
   - list command lists all commands:
-  - command description
-  - command usage
-  - command help
+  - help option display help for the given command.
+  - verbose level option, example : -v -vv -vvv
+  - command description, usage and help
 
 ## Installation
 you can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer.
@@ -63,6 +64,7 @@ class ExampleCommand extends ArvodiaCli {
     public function execute(string $requise, string $optionnel = 'hello')
 	{
         $this->show($optionnel . ' ' . $requise . '!');
+		$this->show('Verbosity levels is : ' . (int) getenv('VERBOSE'));
     }
 }
 ````

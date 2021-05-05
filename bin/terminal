@@ -36,7 +36,7 @@ set_time_limit(0);
 //     * @option(param=optionnel,short=o, message="parameter value is optional")
 //     */
 //    public function execute(string $requise, string $optionnel = 'hello') {
-//        $this->show($optionnel . ' ' . $requise . '!');
+//        $this->show($optionnel . ' ' . $requise . '!'); $this->show('Verbosity levels is : ' . (int) getenv('VERBOSE'));
 //    }
 //}
 
@@ -64,6 +64,14 @@ class ArvodiaCli {
             'type' => 'bool',
             'desc' => 'Display help for the given command. When no command is given display help for the <green>list</green> command'
         ],
+        'verbose' => [
+            'short' => 'v',
+            'long' => 'verbose',
+            'required' => false,
+            'default' => [],
+            'type' => 'array',
+            'desc' => 'Verbose mode it provides additional details for diagnostic and debugging purposes.'
+        ],
     ];
     private const LIST_DESCRIPTION = 'List commands';
     private const LIST_OPTION = [
@@ -90,10 +98,9 @@ EOF;
 
     private $commands;
     private $commandName;
+    private $commandsDir;
     private $commandFullName;
     private $parametresOptions;
-    private $cliPath;
-    private $commandsDir;
 
     public function __construct(array $argv = []) {
         if (get_class() === get_class($this)) {
@@ -107,26 +114,22 @@ EOF;
                 }
             }
             $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
-            $this->cliPath = dirname(__FILE__) . DIRECTORY_SEPARATOR . basename($argv[0]);
-            if (!$this->commandName && $this->getOptions('help')) {
-                if ($this->getCommands($this->commandName)['list']) {
+            if (in_array('-h', $argv) || in_array('--help', $argv)) {
+                if (!$this->commandName || 'list' === $this->commandName) {
                     $this->commandName = 'list';
                     $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
                 }
                 $this->printHelp();
                 self::SUCCESS();
             }
-            if (!$this->commandName && !$this->getOptions('help')) {
-                $this->printHelp();
-                !$this->getCommands() ?: $this->showList(['Available commands' => array_column($this->getCommands(), 'desc', 'name')]);
-                self::SUCCESS();
-            }
-            if ('list' === $this->commandName) {
-                $this->showList(['Available commands' => array_column($this->getCommands(null, true), 'desc', 'name')], (bool) $this->getOptions('raw'));
+            if (!$this->commandName || 'list' === $this->commandName) {
+                $this->commandName ?: $this->printHelp();
+                !$this->getCommands(null, true) ?: $this->showList(['Available commands' => array_column($this->getCommands(), 'desc', 'name')], $this->commandName ? (bool) $this->getOptions('raw') : false);
                 self::SUCCESS();
             }
             if ($command = $this->getCommands($this->commandName)['class'] ?? false) {
-                $options = array_diff_key($this->getOptions(), self::GLOBAL_OPTION);
+                putenv('VERBOSE=' . min(count($this->getOptions('verbose') ?? []), 3));
+                $options = array_diff_key($this->getOptions() ?: [], self::GLOBAL_OPTION);
                 foreach ($this->getCommands($this->commandName)['options'] as $option => $param) {
                     $parametres[] = $options[$option] ?? $param['default'];
                 }
@@ -203,9 +206,9 @@ EOF;
         $this->commandsDir && is_file($this->commandsDir . '/config.json') && ($cliTitle = (json_decode(file_get_contents($this->commandsDir . '/config.json'), TRUE))['arvodia_cli_title'] ?? false);
         $this->commandName ? (($desc = $command['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock($cliTitle ?? self::CLI_TITLE ?: self::CLI_TITLE);
         $this->show('Usage:', 'YELLOW');
-        $this->show($this->commandName ? $command['usage'] ?: self::CLI_USAGE : self::CLI_USAGE);
+        $this->show($this->commandName ? ($command['usage'] ?: str_replace('[command-name] ', '', self::CLI_USAGE) ) : self::CLI_USAGE);
         foreach ($this->commandName ? $command['options'] : self::GLOBAL_OPTION as $param) {
-            $options[($param['short'] ? '-' . $param['short'] . ', ' : '') . $param['long']] = $param['desc'] . ($param['required'] ? '<red>[required]</red>' : ($param['default'] ? '<yellow>[default: "' . $param['default'] . '"]</yellow>' : ''));
+            $options[($param['short'] ? '-' . $param['short'] . ($param['short'] == 'v' ? '|-vv|-vvv' : '') . ', ' : '') . '--' . $param['long']] = $param['desc'] . ($param['required'] ? '<red>[required]</red>' : ($param['default'] ? '<yellow>[default: "' . $param['default'] . '"]</yellow>' : ''));
         }
         if ($options ?? false) {
             $this->showList(['Options' => $options]);
@@ -217,7 +220,7 @@ EOF;
     }
 
     private function getClassCommands(): array {
-        foreach (($tokens = token_get_all(file_get_contents($this->cliPath))) as $key => $token) {
+        foreach (($tokens = token_get_all(file_get_contents(__FILE__))) as $key => $token) {
             if (is_array($token) && $token[0] == T_CLASS && ($tokens[$key + 2] ?? null == T_STRING) && str_ends_with($tokens[$key + 2][1] ?? null, 'Command') && ($name = substr(strtolower($tokens[$key + 2][1]), 0, -7))) {
                 $class = $tokens[$key + 2][1];
                 if (isset($commands[$name])) {
@@ -227,7 +230,7 @@ EOF;
             }
         }
         if (file_exists(dirname(__DIR__) . '/src/Arvodia/Autoloader.php')) {
-            require dirname(__DIR__) . '/src/Arvodia/Autoloader.php';
+            require_once dirname(__DIR__) . '/src/Arvodia/Autoloader.php';
             if ($this->commandsDir = Autoloader::register()) {
                 foreach (scandir($this->commandsDir) as $class) {
                     if (str_ends_with($class, 'Command.php')) {
@@ -275,6 +278,9 @@ EOF;
                 foreach ($rf->getParameters() as $key => $param) {
                     if (strlen($param->getName()) === 1) {
                         $this->exception(13, [$param->getName(), $class]);
+                    }
+                    if (in_array($param->getName(), array_keys(self::GLOBAL_OPTION))) {
+                        $this->exception(17, [$param->getName(), $class]);
                     }
                     $this->commands[$command]['options'][$param->getName()] = [
                         'short' => null,
@@ -326,14 +332,15 @@ EOF;
         if (!is_null($this->parametresOptions)) {
             return $name ? $this->parametresOptions[$name] ?? null : $this->parametresOptions;
         }
+        $this->parametresOptions = [];
         global $argv;
         $options = array_merge($this->commandName ? $this->getCommands($this->commandName)['options'] ?? [] : [], self::GLOBAL_OPTION);
         foreach ($argv as $key => $args) {
-            if ($jump ?? false) {
+            if ($jump ?? false || 0 === $key) {
                 $jump = false;
                 continue;
             }
-            if ($key && isset($args[1]) && '-' == $args[0]) {
+            if (isset($args[1]) && '-' == $args[0]) {
                 $opts = ($value = explode('=', substr($args, '-' == $args[1] ? 2 : 1)))[0];
                 $value = ($value[1] ?? false) && array_shift($value) ? implode('=', $value) : null;
                 if ('-' == $args[1] && !isset($opts[1])) {
@@ -344,15 +351,19 @@ EOF;
                         $this->exception(15, $args);
                     }
                     $i = 0;
+                    $multiShort = [];
                     while ($opts[$i] ?? false) {
                         if (array_column($options, 'required', 'short')[$opts[$i]] ?? false) {
                             $this->exception(14, '-' . $opts[$i]);
                         }
-                        $multiShort['-' . $opts[$i]] = $opts[$i];
+                        $multiShort[] = ['-' . $opts[$i] => $opts[$i]];
                         $i++;
                     }
+                    $opts = $multiShort;
                 }
-                foreach (is_array($opts) ? $opts : [$args => $opts] as $arg => $opt) {
+                foreach (is_array($opts) ? $opts : [[$args => $opts]] as $argOpt) {
+                    $arg = array_key_first($argOpt);
+                    $opt = current($argOpt);
                     if (in_array($opt, array_column($options, $style = (isset($opt[1]) ? 'long' : 'short')))) {
                         if ($options[$option = array_search($opt, array_column($options, $style, 'long'))]['required']) {
                             if (is_null($value)) {
@@ -381,7 +392,7 @@ EOF;
                         $this->exception(12, $arg);
                     }
                 }
-            } else if ($key && $this->commandName != $args) {
+            } else if ($this->commandName != $args) {
                 $this->exception(12, $args);
             }
         }
@@ -390,7 +401,7 @@ EOF;
                 $this->exception(8, $option);
             }
         }
-        return $this->parametresOptions;
+        return $name ? $this->parametresOptions[$name] ?? null : $this->parametresOptions;
     }
 
     private function exception(int $exception = null, $detail = null): array {
@@ -427,6 +438,8 @@ EOF;
             case 15:$this->show(sprintf('Error : The separator "=" invalid in the option "%s".', ...$detail), 'RED');
                 break;
             case 16:$this->show(sprintf('Error : Command "%s" is not defined.', ...$detail), 'RED');
+                break;
+            case 17:$this->show(sprintf('Error : Option "%1$s", in the  "%2$s" class, already exists.', ...$detail), 'RED');
                 break;
             default:$this->show(implode(" ", $detail), 'RED');
                 break;
