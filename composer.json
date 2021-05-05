@@ -13,11 +13,6 @@
     "require": {
         "php": ">=7.2.5"
     },
-    "scripts": {
-        "post-install-cmd": [
-            "src\\Arvodia\\Composer\\Script::postInstall"
-        ]
-    },
     "bin": ["bin/terminal"],
     "config": {
         "bin-dir": "./"

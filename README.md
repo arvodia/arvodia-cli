@@ -33,10 +33,13 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
 you can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer.
 ````
 composer require arvodia/arvodia-cli
+mkdir -p src/Arvodia
+cp -r vendor/arvodia/arvodia-cli/src/Arvodia/Command/ src/Arvodia/
+ln -s ../vendor/arvodia/arvodia-cli/bin/terminal bin/app_name
 ````
 to execute
 ````
-php bin/terminal
+php bin/app_name
 ````
 
 ## Commands

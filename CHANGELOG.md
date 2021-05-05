@@ -1,5 +1,8 @@
 CHANGELOG
 =========
+1.0.6
+-----
+ * remove composer scripts post-install-cmd
 
 1.0.5
 -----
