@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+1.1.1
+-----
+* added choice() method for question
+
 1.1.0
 -----
 * change get verbose, (int) getenv('VERBOSE') to VERBOSE.

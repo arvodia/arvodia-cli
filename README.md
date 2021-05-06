@@ -29,6 +29,7 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
   - help option display help for the given command.
   - verbose level option, example : -v -vv -vvv
   - command description, usage and help
+  - confirm and choice input
 
 ## Screenshot
 ![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/arvodia-cli-screenshot.png)

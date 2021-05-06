@@ -41,6 +41,8 @@ EOF;
      * @option(param=optionnel,short=o, message="parameter value is optional")
      */
     public function execute(string $requise, string $optionnel = 'hello') {
+        $color = $this->choice('Please select your favorite color', ['red', 'blue', 'yellow'], 'blue');
+        $this->show('your choice is : ' . $color);
         $this->show('Verbosity levels is : ' . VERBOSE);
         $this->showBlock($optionnel . ' ' . $requise . '!');
         $this->show($optionnel . ' ' . $requise . '!');
