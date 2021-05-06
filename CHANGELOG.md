@@ -1,5 +1,14 @@
 CHANGELOG
 =========
+1.1.0
+-----
+* change get verbose, (int) getenv('VERBOSE') to VERBOSE.
+* added terminal class, with use InPutTrait and OutputTrait
+* added InPutTrait and OutputTrait trait
+* HelloCommand class extends terminal class 
+* added confirm() method with "Booleanic" validator
+* added screenWidth variable in terminal class
+* added $centerAlign Paramertre for Show Block method, default is rightAlign
 
 1.0.7
 -----

@@ -10,7 +10,7 @@
  * @update  : 4 mai 2021
  */
 
-namespace Arvodia\Terminal\Output;
+namespace Arvodia\Terminal\Traits;
 
 /**
  * Description
@@ -21,19 +21,7 @@ namespace Arvodia\Terminal\Output;
  *
  * @author Sidi Said Redouane <sidisaidredouane@live.com>
  */
-class Display {
-
-    protected $commandFullName;
-
-    private const GREEN = "\033[0;32m";
-    private const RED = "\033[0;31m";
-    private const YELLOW = "\033[1;33m";
-    private const CYAN = "\033[0;36m";
-    private const BGREEN = "\033[42;1;30m";
-    private const BRED = "\033[41;1;37m";
-    private const BBLUE = "\033[44;1;37m";
-    private const BPINK = "\033[45;1;37m";
-    private const RESET = "\033[0m";
+trait OutputTrait {
 
     public function setCommandFullName($name): self {
         $this->commandFullName = $name;
@@ -69,8 +57,13 @@ class Display {
      *  - BGREEN | BRED | BBLUE | BPINK
      * @return void
      */
-    protected function showBlock(string $text, string $color = 'BGREEN'): void {
-        echo PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . PHP_EOL . str_pad($text, 50, " ", STR_PAD_BOTH) . PHP_EOL . str_pad(" ", 50, " ", STR_PAD_BOTH) . PHP_EOL . PHP_EOL . self::RESET . PHP_EOL;
+    protected function showBlock(string $text, string $color = 'BGREEN', bool $centerAlign = false): void {
+        $this->screenWidth = $this->screenWidth ?: (preg_match_all("/rows.([0-9]+);.columns.([0-9]+);/", strtolower(exec('stty -a |grep columns')), $output) && sizeof($output) == 3 ? $output[2][0] : 50);
+        // $this->screenHeight = $output[1][0];
+        $text = implode('', array_map(function ($row) use ($centerAlign) {
+                    return str_pad(' ' . $row, $this->screenWidth, " ", $centerAlign ? STR_PAD_BOTH : STR_PAD_RIGHT);
+                }, explode(PHP_EOL, $text)));
+        echo PHP_EOL . $this->getColor($color) . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . $text . PHP_EOL . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . PHP_EOL . self::RESET . PHP_EOL;
     }
 
     protected function showList(array $array = [], bool $raw = false, int $level = 0): void {

@@ -36,7 +36,8 @@ set_time_limit(0);
 //     * @option(param=optionnel,short=o, message="parameter value is optional")
 //     */
 //    public function execute(string $requise, string $optionnel = 'hello') {
-//        $this->show($optionnel . ' ' . $requise . '!'); $this->show('Verbosity levels is : ' . (int) getenv('VERBOSE'));
+//        $this->show($optionnel . ' ' . $requise . '!'); $this->show('Verbosity levels is : ' . VERBOSE);
+//        self::SUCCESS();
 //    }
 //}
 
@@ -101,6 +102,7 @@ EOF;
     private $commandsDir;
     private $commandFullName;
     private $parametresOptions;
+    private $screenWidth;
 
     public function __construct(array $argv = []) {
         if (get_class() === get_class($this)) {
@@ -114,6 +116,7 @@ EOF;
                 }
             }
             $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
+            define('VERBOSE', min(count($this->getOptions('verbose') ?? []), 3));
             if (in_array('-h', $argv) || in_array('--help', $argv)) {
                 if (!$this->commandName || 'list' === $this->commandName) {
                     $this->commandName = 'list';
@@ -128,7 +131,6 @@ EOF;
                 self::SUCCESS();
             }
             if ($command = $this->getCommands($this->commandName)['class'] ?? false) {
-                putenv('VERBOSE=' . min(count($this->getOptions('verbose') ?? []), 3));
                 $options = array_diff_key($this->getOptions() ?: [], self::GLOBAL_OPTION);
                 foreach ($this->getCommands($this->commandName)['options'] as $option => $param) {
                     $parametres[] = $options[$option] ?? $param['default'];
@@ -153,14 +155,26 @@ EOF;
         exit(1);
     }
 
+    protected function isEnabled($variable) {
+        if (!isset($variable)) {
+            return null;
+        }
+        return filter_var($variable, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+
     protected function show($text, $color = null, ?string $newline = PHP_EOL): void {
         echo $this->getColor($color) . $text = preg_replace_callback('#<(green|red|yellow|cyan)>(.+)</(?:green|red|yellow|cyan)>#isU', function ($regs) {
             return $this->getColor($regs[1]) . $regs[2] . self::RESET;
         }, $text = str_replace('%command.full_name%', $this->commandFullName, $text)) . self::RESET . $newline;
     }
 
-    protected function showBlock(string $text, string $color = 'BGREEN'): void {
-        echo PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . self::RESET . PHP_EOL . $this->getColor($color) . str_pad($text, 50, " ", STR_PAD_BOTH) . self::RESET . PHP_EOL . $this->getColor($color) . str_pad(" ", 50, " ", STR_PAD_BOTH) . self::RESET . PHP_EOL . PHP_EOL . PHP_EOL;
+    protected function showBlock(string $text, string $color = 'BGREEN', bool $centerAlign = false): void {
+        $this->screenWidth = $this->screenWidth ?: (preg_match_all("/rows.([0-9]+);.columns.([0-9]+);/", strtolower(exec('stty -a |grep columns')), $output) && sizeof($output) == 3 ? $output[2][0] : 50);
+        // $this->screenHeight = $output[1][0];
+        $text = implode('', array_map(function ($row) use ($centerAlign) {
+                    return str_pad(' ' . $row, $this->screenWidth, " ", $centerAlign ? STR_PAD_BOTH : STR_PAD_RIGHT);
+                }, explode(PHP_EOL, $text)));
+        echo PHP_EOL . $this->getColor($color) . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . $text . PHP_EOL . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . PHP_EOL . self::RESET . PHP_EOL;
     }
 
     protected function showList(array $array = [], bool $raw = false, int $level = 0): void {
@@ -191,20 +205,10 @@ EOF;
         return $max;
     }
 
-    /**
-     * @author  : Julio Marchi
-     */
-    private function isEnabled($variable) {
-        if (!isset($variable)) {
-            return null;
-        }
-        return filter_var($variable, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-    }
-
     private function printHelp(): void {
         $command = $this->getCommands($this->commandName);
         $this->commandsDir && is_file($this->commandsDir . '/config.json') && ($cliTitle = (json_decode(file_get_contents($this->commandsDir . '/config.json'), TRUE))['arvodia_cli_title'] ?? false);
-        $this->commandName ? (($desc = $command['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock($cliTitle ?? self::CLI_TITLE ?: self::CLI_TITLE);
+        $this->commandName ? (($desc = $command['desc']) ? $this->show('<yellow>Description:</yellow>' . PHP_EOL . $desc . PHP_EOL,) : '') : $this->showBlock($cliTitle ?? self::CLI_TITLE ?: self::CLI_TITLE, 'BGREEN', true);
         $this->show('Usage:', 'YELLOW');
         $this->show($this->commandName ? ($command['usage'] ?: str_replace('[command-name] ', '', self::CLI_USAGE) ) : self::CLI_USAGE);
         foreach ($this->commandName ? $command['options'] : self::GLOBAL_OPTION as $param) {
@@ -404,7 +408,7 @@ EOF;
         return $name ? $this->parametresOptions[$name] ?? null : $this->parametresOptions;
     }
 
-    private function exception(int $exception = null, $detail = null): array {
+    private function exception(int $exception = null, $detail = null): void {
         $detail = is_null($detail) ? '' : (is_array($detail) ? $detail : [$detail]);
         switch ($exception) {
             case 1:$this->show(sprintf('Error : The "execute()" method of the "%s" class has not been declared.', ...$detail), 'RED');
@@ -441,7 +445,7 @@ EOF;
                 break;
             case 17:$this->show(sprintf('Error : Option "%1$s", in the  "%2$s" class, already exists.', ...$detail), 'RED');
                 break;
-            default:$this->show(implode(" ", $detail), 'RED');
+            default:$this->show(implode(" ", $detail ?: []), 'RED');
                 break;
         }
         self::FAILURE();

@@ -67,7 +67,7 @@ class ExampleCommand extends ArvodiaCli {
     public function execute(string $requise, string $optionnel = 'hello')
 	{
         $this->show($optionnel . ' ' . $requise . '!');
-		$this->show('Verbosity levels is : ' . (int) getenv('VERBOSE'));
+		$this->show('Verbosity levels is : ' . VERBOSE);
     }
 }
 ````

@@ -12,7 +12,7 @@
 
 namespace Arvodia\Command;
 
-use Arvodia\Terminal\Output\Display;
+use Arvodia\Terminal\Terminal;
 
 /**
  * Hello Command
@@ -23,7 +23,7 @@ use Arvodia\Terminal\Output\Display;
  *
  * @author Sidi Said Redouane <sidisaidredouane@live.com>
  */
-class HelloCommand extends Display {
+class HelloCommand extends Terminal {
 
     protected const DESCRIPTION = 'Hello commands';
     protected const HELP = <<<'EOF'
@@ -41,7 +41,7 @@ EOF;
      * @option(param=optionnel,short=o, message="parameter value is optional")
      */
     public function execute(string $requise, string $optionnel = 'hello') {
-        $this->show('Verbosity levels is : ' . (int) getenv('VERBOSE'));
+        $this->show('Verbosity levels is : ' . VERBOSE);
         $this->showBlock($optionnel . ' ' . $requise . '!');
         $this->show($optionnel . ' ' . $requise . '!');
         $array = ['type1' => [
@@ -54,6 +54,8 @@ EOF;
                 'val3',
         ]];
         $this->showList($array);
+        $this->SUCCESS();
+        $this->FAILURE();
     }
 
 }
