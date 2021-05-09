@@ -1,4 +1,4 @@
-![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/arvodia-logo.png)
+![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/img/arvodia-logo.png)
 # ARVODIA CLI Tools
 The Arvodia CLI Tools makes it easy to create command line interfaces.
 
@@ -32,7 +32,7 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
   - confirm and choice input
 
 ## Screenshot
-![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/arvodia-cli-screenshot.png)
+![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/img/arvodia-cli-screenshot.png)
 
 ## Installation
 You can [download](https://github.com/arvodia/arvodia-cli/tree/main/bin "download") only the bin file and work with it, or integrate arvodia-cli into your project with composer.
