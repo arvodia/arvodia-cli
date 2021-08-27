@@ -1,5 +1,11 @@
 CHANGELOG
 =========
+
+1.1.3
+-----
+* Fix code
+* Added Generate command
+
 1.1.2
 -----
 * Fix show help
@@ -12,8 +18,8 @@ CHANGELOG
 1.1.0
 -----
 * change get verbose, (int) getenv('VERBOSE') to VERBOSE.
-* added terminal class, with use InPutTrait and OutputTrait
-* added InPutTrait and OutputTrait trait
+* added terminal class, with use InputTrait and OutputTrait
+* added InputTrait and OutputTrait trait
 * HelloCommand class extends terminal class 
 * added confirm() method with "Booleanic" validator
 * added screenWidth variable in terminal class

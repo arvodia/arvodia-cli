@@ -32,6 +32,7 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
   - verbose level option, example : -v -vv -vvv
   - command description, usage and help
   - confirm and choice input
+  - generate command
 
 ## Screenshot
 ![EURL ARVODIA Logo](https://raw.githubusercontent.com/arvodia/src/main/img/arvodia-cli-screenshot.png)

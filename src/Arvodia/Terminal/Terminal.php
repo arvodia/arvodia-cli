@@ -12,7 +12,7 @@
 
 namespace Arvodia\Terminal;
 
-use Arvodia\Terminal\Traits\InPutTrait;
+use Arvodia\Terminal\Traits\InputTrait;
 use Arvodia\Terminal\Traits\OutputTrait;
 
 /**
@@ -26,7 +26,7 @@ use Arvodia\Terminal\Traits\OutputTrait;
  */
 class Terminal {
 
-    use InPutTrait;
+    use InputTrait;
     use OutputTrait;
 
     protected $commandFullName;

@@ -63,7 +63,7 @@ trait OutputTrait {
         $text = implode('', array_map(function ($row) use ($centerAlign) {
                     return str_pad(' ' . $row, $this->screenWidth, " ", $centerAlign ? STR_PAD_BOTH : STR_PAD_RIGHT);
                 }, explode(PHP_EOL, $text)));
-        echo PHP_EOL . $this->getColor($color) . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . $text . PHP_EOL . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . PHP_EOL . self::RESET . PHP_EOL;
+        echo PHP_EOL . $this->getColor($color) . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . $text . PHP_EOL . str_pad(" ", $this->screenWidth, " ", STR_PAD_BOTH) . PHP_EOL . self::RESET . PHP_EOL . PHP_EOL;
     }
 
     protected function showList(array $array = [], bool $raw = false, int $level = 0): void {

@@ -21,7 +21,7 @@ namespace Arvodia\Terminal\Traits;
  *
  * @author Sidi Said Redouane <sidisaidredouane@live.com>
  */
-trait InPutTrait {
+trait InputTrait {
 
     public function confirm(string $question, bool $default = null): bool {
         $answer = null;
