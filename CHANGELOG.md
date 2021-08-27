@@ -1,5 +1,10 @@
 CHANGELOG
 =========
+1.1.2
+-----
+* Fix show help
+* Added Polyfills
+
 1.1.1
 -----
 * added choice() method for question

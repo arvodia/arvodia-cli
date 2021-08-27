@@ -133,7 +133,6 @@ EOF;
                 }
             }
             $this->commandFullName = 'php ' . $argv[0] . ' ' . $this->commandName;
-            define('VERBOSE', min(count($this->getOptions('verbose') ?? []), 3));
             if (in_array('-h', $argv) || in_array('--help', $argv)) {
                 if (!$this->commandName || 'list' === $this->commandName) {
                     $this->commandName = 'list';
@@ -142,6 +141,7 @@ EOF;
                 $this->printHelp();
                 self::SUCCESS();
             }
+            define('VERBOSE', min(count($this->getOptions('verbose') ?? []), 3));
             if (!$this->commandName || 'list' === $this->commandName) {
                 $this->commandName ?: $this->printHelp();
                 !$this->getCommands(null, true) ?: $this->showList(['Available commands' => array_column($this->getCommands(), 'desc', 'name')], $this->commandName ? (bool) $this->getOptions('raw') : false);
