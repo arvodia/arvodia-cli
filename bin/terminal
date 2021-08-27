@@ -20,6 +20,23 @@ if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 set_time_limit(0);
 
 /**
+ * Polyfills
+ */
+if (!function_exists('str_starts_with')) {
+
+    function str_starts_with(?string $haystack, ?string $needle): bool {
+        return \strncmp($haystack, $needle, \strlen($needle)) === 0;
+    }
+
+}
+if (!function_exists('str_ends_with')) {
+
+    function str_ends_with(?string $haystack, ?string $needle): bool {
+        return $needle === '' || $needle === \substr($haystack, - \strlen($needle));
+    }
+
+}
+/**
  * Example Command
  */
 //class ExampleCommand extends ArvodiaCli {
