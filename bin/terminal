@@ -516,7 +516,9 @@ EOF;
                             } else {
                                 $value = true;
                             }
-                        } elseif ((!is_null($options[$option]['type']) && 'array' !== $options[$option]['type']) && gettype($value) !== $options[$option]['type']) {
+                        } elseif ((!is_null($options[$option]['type']) && 'int' === $options[$option]['type']) && !preg_match('/^[0-9\.]+$/', $value, $matches)) {
+                            $this->exception(11, [$option, $options[$option]['type'], gettype($value)]);
+                        } elseif ((!is_null($options[$option]['type']) && 'array' !== $options[$option]['type'] && 'int' !== $options[$option]['type']) && gettype($value) !== $options[$option]['type']) {
                             $this->exception(11, [$option, $options[$option]['type'], gettype($value)]);
                         }
                         $this->parametresOptions[$option] = ('array' === $options[$option]['type'] ? array_merge([$value], $this->parametresOptions[$option] ?? []) : $value);

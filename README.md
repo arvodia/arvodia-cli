@@ -56,7 +56,8 @@ Class Commands can be integrated directly in the `bin/terminal` file, if you wan
 You can also create PHP files in the `src/Arvodia/Command` folder, the files must be suffixed with Command, for example `NameCommand.php`, with a class of the same name as the file, 
 the commands is automatically detected by arvodia-cli.
 
-The class must also contain an `execute()` method, the options passed in the command line will be injected into the parameters of the `execute()` function. 
+The class must also contain an `execute()` method, the options passed in the command line will be injected into the parameters of the `execute()` function.
+in the functions you must always start with the require parameter then optional.
 
 ## Example
 ````

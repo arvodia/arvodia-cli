@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.1.4
+-----
+* Variable typing
+
 1.1.3
 -----
 * Fix code
