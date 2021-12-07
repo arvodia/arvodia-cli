@@ -2,15 +2,6 @@
 # ARVODIA CLI Tools
 The Arvodia CLI Tools makes it easy to create command line interfaces.
 
-````
-<body>
-<h1>old</h1>
-```
-<h2>new</h2>
-```
-</body>
-````
-
 ## Contents
  - [Feature](#feature)
  - [Screenshot](#screenshot)
