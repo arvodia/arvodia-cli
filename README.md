@@ -5,7 +5,7 @@ The Arvodia CLI Tools makes it easy to create command line interfaces.
 ````PHP
 <?php
 echo "old";
-<span style="color: green"> echo "new"; </span>
+`#00ff00` echo "new";
 ?>
 ````
 
