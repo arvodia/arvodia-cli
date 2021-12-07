@@ -2,6 +2,15 @@
 # ARVODIA CLI Tools
 The Arvodia CLI Tools makes it easy to create command line interfaces.
 
+````
+<?php
+echo "old";
+```diff
++ echo "new";
+```
+?>
+````
+
 ## Contents
  - [Feature](#feature)
  - [Screenshot](#screenshot)
