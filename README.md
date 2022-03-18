@@ -103,6 +103,21 @@ Note:
 ## Configuration
 To customize the title of the console introduction, modify the `arvodia_cli_title` key in the `Command/config.json` file
 
+### Booter
+
+in Command/config.json
+
+```
+{
+    "arvodia_cli_title": "Your cli name",
+    "cmd_loader": {
+        "youcommendname": {
+            "Config.php": "/laminas/laminas-config/src"
+        }
+    }
+}
+```
+
 ## Git clone
 ```
 $ git clone https://github.com/arvodia/arvodia-cli.git

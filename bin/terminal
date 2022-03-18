@@ -2,6 +2,30 @@
 <?php
 
 /**
+ * @author  : Sidi Said Redouane <sidisaidredouane@live.com>
+ * @agency  : EURL ARVODIA
+ * @email   : arvodia@hotmail.com
+ * @project : BigCli
+ * @date    : 2022
+ * @license : All Rights Reserved
+ * @update  : 01 mai 2021
+ * @update  : 18 mars 2022
+ */
+if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+    echo 'Warning: The console should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;
+}
+
+while ('/' !== ($parent = dirname($parent ?? __DIR__))) {
+    if (is_dir($parent . '/vendor')) {
+        define('PROJECT_DIR', $parent);
+        define('VENDOR_DIR', PROJECT_DIR . '/vendor');
+    }
+}
+
+
+set_time_limit(0);
+
+/**
  * @author      : Sidi Said Redouane <sidisaidredouane@live.com>
  * @agency      : EURL ARVODIA
  * @email       : arvodia@hotmail.com
@@ -11,14 +35,7 @@
  * @date        : 2021
  * @license     : GNU General Public License v3.0
  * @homepage    : https://github.com/arvodia/arvodia-cli
- * @update      : 01 mai 2021
  */
-if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
-    echo 'Warning: The console should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;
-}
-
-set_time_limit(0);
-
 /**
  * Polyfills
  */
@@ -226,6 +243,9 @@ EOF;
                 foreach ($this->getCommands($this->commandName)['options'] as $option => $param) {
                     $parametres[] = $options[$option] ?? $param['default'];
                 }
+                // autoloader
+                self::cmdBooter($this->commandsDir, $this->commandName);
+                // execute
                 (new $command())->setCommandFullName($this->commandFullName)->execute(...$parametres ?? []);
             } else {
                 $this->exception(16, $this->commandName);
@@ -318,6 +338,22 @@ EOF;
             }
         }
         return $answer;
+    }
+
+    private static function cmdBooter(string $commandsDir, string $commandName) {
+        if (defined('PROJECT_DIR')) {
+            if (($libraries = (json_decode(file_get_contents($commandsDir . '/config.json'), TRUE))['cmd_loader'][$commandName] ?? false)) {
+                foreach ($libraries as $class => $dir) {
+                    if (!($configDir = realpath(VENDOR_DIR . $dir))) {
+                        var_dump('ERROR DIR PAth : ' . $dir);
+                        die(1);
+                    }
+                    if (file_exists(($classLoad = realpath($configDir . '/' . $class)))) {
+                        require $classLoad;
+                    }
+                }
+            }
+        }
     }
 
     private function getColor($color = null): string {

@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.1.5
+-----
+* Commands loader booter ( config.json )
+
 1.1.4
 -----
 * Variable typing
