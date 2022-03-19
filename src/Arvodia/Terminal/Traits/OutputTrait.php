@@ -84,7 +84,7 @@ trait OutputTrait {
     }
 
     private function getColor($color = null): string {
-        return defined('self::' . $color = strtoupper($color)) ? constant('self::' . $color) : self::RESET;
+        return $color && defined('self::' . ($color = strtoupper($color))) ? constant('self::' . $color) : self::RESET;
     }
 
     private function getMaxStrlen(array $array): int {

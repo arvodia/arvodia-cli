@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.1.6
+-----
+* Fix Show color
+
 1.1.5
 -----
 * Commands loader booter ( config.json )
