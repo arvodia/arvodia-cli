@@ -112,7 +112,7 @@ in Command/config.json
     "arvodia_cli_title": "Your cli name",
     "cmd_loader": {
         "youcommendname": {
-            "Config.php": "/laminas/laminas-config/src"
+            "/laminas/laminas-config/src": "Config.php"
         }
     }
 }
