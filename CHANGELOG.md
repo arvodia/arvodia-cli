@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.1.8
+-----
+* PROJET_DIR env
+
+1.1.7
+-----
+* added autoload by command in config.json
+
 1.1.6
 -----
 * Fix Show color

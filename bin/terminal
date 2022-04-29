@@ -15,9 +15,9 @@ if (!in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     echo 'Warning: The console should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;
 }
 
-while ('/' !== ($parent = dirname($parent ?? __DIR__))) {
-    if (is_dir($parent . '/vendor')) {
-        define('PROJECT_DIR', $parent);
+while ('/' !== ($parent = dirname($parent ?? __DIR__))) {    
+    if ('/vendor' === substr($parent, -7)) {
+        define('PROJECT_DIR', dirname($parent));
         define('VENDOR_DIR', PROJECT_DIR . '/vendor');
     }
 }
@@ -343,7 +343,7 @@ EOF;
     private static function cmdBooter(string $commandsDir, string $commandName) {
         if (defined('PROJECT_DIR')) {
             if (($libraries = (json_decode(file_get_contents($commandsDir . '/config.json'), TRUE))['cmd_loader'][$commandName] ?? false)) {
-                foreach ($libraries as $class => $dir) {
+                foreach ($libraries as $dir => $class) {
                     if (!($configDir = realpath(VENDOR_DIR . $dir))) {
                         var_dump('ERROR DIR PAth : ' . $dir);
                         die(1);
